@@ -4,8 +4,6 @@ import { signIn, signOut, useSession } from "next-auth/react";
 
 import { Component } from "react";
 
-import { api } from "~/utils/api";
-
 import { basicSetup, EditorView } from "codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 
@@ -14,7 +12,7 @@ const Home: NextPage = () => {
     <>
       <Head>
         <title>JS Web Collab</title>
-        <meta name="description" content="Foo bar fill me: allows people to run JS scripts from anywhere" />
+        <meta name="description" content="Allows people to run JS scripts from anywhere" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
@@ -36,16 +34,10 @@ export default Home;
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
 
-  const { data: isRegisteredUser } = api.example.isRegisteredUser.useQuery(
-    { id: sessionData?.user.id },
-    { enabled: sessionData?.user !== undefined },
-  );
-
   return (
     <div className="flex flex-col items-center justify-center gap-4">
-      {isRegisteredUser !== undefined && isRegisteredUser && <MainScreen />}
+      {sessionData && <MainScreen />}
       <div className="text-center text-2xl text-white">
-        {isRegisteredUser !== undefined && !isRegisteredUser && <p>You do not seem to be registered for JS Web Collab, sorry.</p>}
         {(!sessionData) && <p>You would need to sign in to continue</p>}
         {sessionData && <p>Logged in as {sessionData.user?.name}</p>}
       </div>
@@ -63,7 +55,7 @@ let editorView: EditorView;
 
 class MainScreen extends Component {
   componentDidMount() {
-    let parent: Element = document.querySelector('#editor-view')!;
+    const parent: Element = document.querySelector('#editor-view')!;
 
     if (editorView === undefined) {
       // Create editorView and attach to new MainScreen.
@@ -79,23 +71,21 @@ class MainScreen extends Component {
   }
 
   render() {
-    let result = 
-    <div className="flex flex-col items-center justify-center gap-4">
-      <div id="editor-view" className="bg-white"></div>
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={() => void run()}
-      >Run</button>
-      <div id="console-output" className="bg-white">
-        Output
-      </div>
-    </div>
-    return result;
+    return <div className="flex flex-col items-center justify-center gap-4">
+             <div id="editor-view" className="bg-white"></div>
+             <button
+               className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+               onClick={() => void run()}
+             >Run</button>
+             <div id="console-output" className="bg-white">
+               Output
+             </div>
+           </div>
   }
-};
+}
 
 function jswcConsoleLog(object: any) {
-  const previousOutput = document.getElementById('console-output')!.textContent;
+  const previousOutput = document.getElementById('console-output')!.textContent ?? '';
   const newOutput = JSON.stringify(object) + '\n';
   document.getElementById('console-output')!.textContent = previousOutput + newOutput;
 }
